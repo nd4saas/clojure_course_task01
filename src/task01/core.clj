@@ -2,28 +2,19 @@
   (:require [pl.danieljanus.tagsoup :refer :all])
   (:gen-class))
 
+(defn inner-tags [tag] (filter #(vector? %) tag))
+(defn get-attr [tag attr] (get (nth tag 1) attr))
+(defn update-acc [acc tag]  (if (= :a (nth tag 0)) (conj acc tag) acc))
+(defn find-anchors [tag]
+  (loop [queue (list tag) acc ()]
+		(if (empty? queue) acc
+			(let [head (first queue)]
+				(recur (concat (rest queue) (inner-tags head)) (update-acc acc head))))))
 
+  
 (defn get-links []
-" 1) Find all elements containing {:class \"r\"}.
-
-Example:
-[:h3 {:class \"r\"} [:a {:shape \"rect\", :class \"l\",
-                         :href \"https://github.com/clojure/clojure\",
-                         :onmousedown \"return rwt(this,'','','','4','AFQjCNFlSngH8Q4cB8TMqb710dD6ZkDSJg','','0CFYQFjAD','','',event)\"}
-                     [:em {} \"clojure\"] \"/\" [:em {} \"clojure\"] \" · GitHub\"]]
-
-   2) Extract href from the element :a.
-
-The link from the example above is 'https://github.com/clojure/clojure'.
-
-  3) Return vector of all 10 links.
-
-Example: ['https://github.com/clojure/clojure', 'http://clojure.com/', . . .]
-"
   (let [data (parse "clojure_google.html")]
-    nil))
+    (into [] (map #(get-attr % :href) (filter #(= "l" (get-attr % :class)) (find-anchors data))))))
 
 (defn -main []
   (println (str "Found " (count (get-links)) " links!")))
-
-
